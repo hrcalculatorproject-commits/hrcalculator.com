@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hunt Royale Advanced Build Planner - Advanced calculator for creating and sharing your builds</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico?" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <style>
       :root {
         --bg: #07111f;
@@ -664,18 +664,6 @@
         line-height: 1.5;
       }
 
-      .titan-bulk-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 140px;
-        gap: 10px;
-        align-items: end;
-        margin: 14px 0 18px;
-      }
-
-      .titan-bulk-row .button {
-        width: 100%;
-      }
-
       .titan-level-row {
         display: grid;
         grid-template-columns: 42px 1fr 42px;
@@ -994,16 +982,16 @@
           <h1>Hunt Royale Advanced Build Planner - Advanced calculator for creating and sharing your builds</h1>
           <div style="margin-top:16px;">
             <div style="color:var(--muted); font-size:14px; margin-bottom:14px; line-height:1.7;">
-              Looking for a basic build planner with less depth (or pre-titan gear) but easier to use? Check out these tools <a href="https://more-huntroyale.com/public/set-builder.html" target="_blank" rel="noopener noreferrer">https://more-huntroyale.com/public/set-builder.html</a> I created this tool as I did not know this tool existed, but I prefer more advanced and specific build planning! Happy hunting - 『DKS』Abox<br />Creator code: Darkseid
+              Looking for a basic build planner with less depth but easier to use? Check out these tools https://more-huntroyale.com/public/set-builder.html I created this tool as I did not know this tool existed, but I prefer more advanced and specific build planning! Happy hunting - 『DKS』Abox<br />Creator code: Darkseid
             </div>
             <div style="color:var(--muted); font-size:14px; margin-bottom:10px;">Key features</div>
             <ul style="margin:0 0 14px 18px; padding:0; color:var(--text); line-height:1.7;">
+              <li>Export your builds as an easy-to-read image, or export selected loadouts together as one big scrollable image</li>
               <li>Detailed build planner for Helmet, Chest, Boots, Weapon, and Ring with Raw, Super, and Mega Powerstones in every socket</li>
+              <li>Combined Build Stats, Overall Combined Stats, Power Stone Gearscore, Titan Gear Score, and Overall Gear Score</li>
               <li>Titan Gear planner with levels, enchants, enchant ranks, effective rank calculation, and Titan enchant totals</li>
               <li>Per-build pet selection with grouped pet families, aura effects, and ability reference</li>
-              <li>Combined Build Stats, Overall Combined Stats, Power Stone Gearscore, Titan Gear Score, and Overall Gear Score</li>
               <li>Unlimited saved loadouts with local storage, plus save, load, delete, and export controls</li>
-              <li>Export your builds as an easy-to-read image, or export selected loadouts together as one big scrollable image</li>
             </ul>
             <details style="margin-bottom:16px;">
               <summary style="cursor:pointer; color:#d7eaff; font-weight:600;">and more &gt;</summary>
@@ -1057,6 +1045,11 @@
               <button class="button" id="loadLoadoutButton">Load</button>
               <button class="button" id="deleteLoadoutButton">Delete</button>
               <button class="button" id="exportAllLoadoutsButton">Export All Loadouts</button>
+            </div>
+            <div class="button-row" style="margin-top:12px;">
+              <button class="button" id="exportRawBuildDataButton">Export Raw Build Data</button>
+              <button class="button" id="importRawBuildDataButton">Import Raw Build Data</button>
+              <input id="importRawBuildDataInput" type="file" accept="application/json,.json" hidden />
             </div>
             <div style="margin-top:14px;">
               <div class="footer-note" style="margin-top:0;margin-bottom:8px;">Select loadouts for Export All Loadouts</div>
@@ -1261,15 +1254,6 @@
       <section class="panel section" id="titanSection">
         <h2>Titan Gear</h2>
         <p class="sub">Separate from gems, Titan Gear uses shared level-based base stats across all five slots plus enchantments with rank-based effects.</p>
-          <div class="titan-bulk-row">
-            <div>
-              <label for="setAllTitanLevels">Set all Titan Gear levels</label>
-              <select id="setAllTitanLevels"></select>
-            </div>
-            <div>
-              <button class="button" id="applyAllTitanLevelsButton" type="button">Apply to all</button>
-            </div>
-          </div>
         <div class="titan-grid" id="titanGrid"></div>
         <div class="titan-summary-grid">
           <div class="tile">
@@ -1648,6 +1632,9 @@
         loadLoadoutButton: document.getElementById("loadLoadoutButton"),
         deleteLoadoutButton: document.getElementById("deleteLoadoutButton"),
         exportAllLoadoutsButton: document.getElementById("exportAllLoadoutsButton"),
+        exportRawBuildDataButton: document.getElementById("exportRawBuildDataButton"),
+        importRawBuildDataButton: document.getElementById("importRawBuildDataButton"),
+        importRawBuildDataInput: document.getElementById("importRawBuildDataInput"),
         loadoutExportSelection: document.getElementById("loadoutExportSelection"),
         loadoutStatus: document.getElementById("loadoutStatus"),
         buildPlannerTitle: document.getElementById("buildPlannerTitle"),
@@ -1657,8 +1644,6 @@
         selectedPetName: document.getElementById("selectedPetName"),
         selectedPetAbility: document.getElementById("selectedPetAbility"),
         petAuraStats: document.getElementById("petAuraStats"),
-        setAllTitanLevels: document.getElementById("setAllTitanLevels"),
-        applyAllTitanLevelsButton: document.getElementById("applyAllTitanLevelsButton"),
         titanGrid: document.getElementById("titanGrid"),
         titanBaseTotals: document.getElementById("titanBaseTotals"),
         titanEnchantTotals: document.getElementById("titanEnchantTotals"),
@@ -1737,11 +1722,7 @@
 
       function getGemStats(gemName, slotType, level) {
         if (isEmptyPowerstone(gemName)) return {};
-        const gemData = GEMS[gemName];
-        if (!gemData) return {};
-        const slotData = gemData[slotType];
-        if (!slotData) return {};
-        return slotData[level] || {};
+        return GEMS[gemName][slotType][level] || {};
       }
 
       function addScaledStats(target, source, scale) {
@@ -2869,6 +2850,111 @@
         localStorage.setItem(LOADOUT_STORAGE_KEY, JSON.stringify(savedLoadouts));
       }
 
+      function downloadTextFile(filename, text, mimeType = "application/json") {
+        const blob = new Blob([text], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function getRawBuildExportPayload() {
+        return {
+          version: 1,
+          type: "hunt-royale-raw-build-data",
+          exportedAt: new Date().toISOString(),
+          name: (els.exportBuildNameInput?.value || savedLoadouts[state.selectedLoadout]?.name || "My Build").trim() || "My Build",
+          buildState: deepClone(buildState),
+          titanState: deepClone(titanState),
+          petState: deepClone(petState),
+        };
+      }
+
+      function normalizeImportedBuildState(nextBuildState) {
+        const normalized = getBlankBuildState();
+        Object.keys(normalized).forEach((key) => {
+          normalized[key] = {
+            ...normalized[key],
+            ...(nextBuildState && nextBuildState[key] ? nextBuildState[key] : {}),
+          };
+        });
+        return normalized;
+      }
+
+      function normalizeImportedTitanState(nextTitanState) {
+        const normalized = getDefaultTitanState();
+        Object.keys(normalized).forEach((key) => {
+          normalized[key] = {
+            ...normalized[key],
+            ...(nextTitanState && nextTitanState[key] ? nextTitanState[key] : {}),
+          };
+        });
+        return normalized;
+      }
+
+      function normalizeImportedPetState(nextPetState) {
+        return {
+          ...getDefaultPetState(),
+          ...(nextPetState || {}),
+        };
+      }
+
+      function exportRawBuildData() {
+        const payload = getRawBuildExportPayload();
+        const safeName = (payload.name || "build").trim() || "build";
+        downloadTextFile(`huntroyalecalculator.com ${safeName} raw-build-data.json`, JSON.stringify(payload, null, 2));
+        const message = "Raw build data exported.";
+        setStatus(message);
+        showToast(message);
+      }
+
+      function importRawBuildDataPayload(payload) {
+        const importedBuildState = payload && payload.buildState ? payload.buildState : payload;
+        if (!importedBuildState || typeof importedBuildState !== "object") {
+          throw new Error("Invalid raw build data.");
+        }
+
+        applyBuildState(normalizeImportedBuildState(importedBuildState));
+        applyTitanState(normalizeImportedTitanState(payload && payload.titanState ? payload.titanState : null));
+        applyPetState(normalizeImportedPetState(payload && payload.petState ? payload.petState : null));
+
+        state.selectedArea = "armor";
+        state.selectedEquipment = "helmet";
+        state.selectedSlot = 1;
+        loadSelectedSocket();
+        render();
+
+        const importedName = payload && payload.name ? payload.name : "Raw build data";
+        const message = `${importedName} imported.`;
+        setStatus(message);
+        showToast(message);
+      }
+
+      function handleImportRawBuildFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(String(reader.result || "{}"));
+            importRawBuildDataPayload(parsed);
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Import failed.";
+            setStatus(message);
+            showToast(message);
+          }
+        };
+        reader.onerror = () => {
+          const message = "Failed to read the selected file.";
+          setStatus(message);
+          showToast(message);
+        };
+        reader.readAsText(file);
+      }
+
       function applyBuildState(nextBuild) {
         Object.keys(buildState).forEach((key) => {
           buildState[key] = nextBuild[key] ? { ...nextBuild[key] } : defaultSocketConfig("raw");
@@ -3204,14 +3290,6 @@
         render();
       }
 
-      function setAllTitanLevels(level) {
-        TITAN_SLOTS.forEach((slot) => {
-          titanState[slot].level = level;
-        });
-        persistLoadouts();
-        render();
-      }
-
       function changeTitanLevel(slot, delta) {
         const current = titanState[slot].level || 15;
         const next = Math.max(1, Math.min(15, current + delta));
@@ -3219,20 +3297,6 @@
       }
 
       function renderTitanSection() {
-        if (els.setAllTitanLevels && !els.setAllTitanLevels.options.length) {
-          for (let level = 1; level <= 15; level += 1) {
-            const option = document.createElement("option");
-            option.value = String(level);
-            option.textContent = `Level ${level}`;
-            els.setAllTitanLevels.appendChild(option);
-          }
-        }
-        if (els.setAllTitanLevels) {
-          const levels = TITAN_SLOTS.map((slot) => titanState[slot].level);
-          const allSame = levels.every((level) => level === levels[0]);
-          els.setAllTitanLevels.value = String(allSame ? levels[0] : 15);
-        }
-
         const effectiveRanks = getTitanEffectiveRanks();
         els.titanGrid.innerHTML = "";
         const baseTotals = {};
@@ -3348,75 +3412,8 @@
         return rows.map((row) => `+${row.value}${row.percent ? "%" : ""} ${row.name === name ? "" : `(${row.name})`}`.trim()).join(" / ");
       }
 
-      function ensureTitanRankTableBody() {
-        let tableBody = document.getElementById("titanRankTableBody");
-        if (tableBody) return tableBody;
-
-        const section = document.getElementById("titanRankTableSection");
-        if (!section) return null;
-
-        section.innerHTML = `
-          <h2>Titan Enchantment Rank Table</h2>
-          <p class="sub">This table shows each enchantment’s value by rank.</p>
-          <div class="catalog-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Enchantment</th>
-                  <th>Rank 1</th>
-                  <th>Rank 2</th>
-                  <th>Rank 3</th>
-                  <th>Rank 4</th>
-                  <th>Rank 5</th>
-                </tr>
-              </thead>
-              <tbody id="titanRankTableBody"></tbody>
-            </table>
-          </div>`;
-
-        tableBody = document.getElementById("titanRankTableBody");
-        if (els) els.titanRankTableBody = tableBody;
-        return tableBody;
-      }
-
-      function ensureCatalogBody() {
-        let catalogBody = document.getElementById("catalogBody");
-        if (catalogBody) return catalogBody;
-
-        const section = document.getElementById("powerstoneReferenceSection");
-        if (!section) return null;
-
-        section.innerHTML = `
-          <h2>Powerstone Reference Table</h2>
-          <p class="sub">The reference table switches automatically between armor values and weapon/ring values based on the selected equipment slot.</p>
-          <div class="catalog-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Gem</th>
-                  <th>Lv1</th>
-                  <th>Lv2</th>
-                  <th>Lv3</th>
-                  <th>Lv4</th>
-                  <th>Lv5</th>
-                  <th>Lv6</th>
-                  <th>Lv7</th>
-                </tr>
-              </thead>
-              <tbody id="catalogBody"></tbody>
-            </table>
-          </div>
-          <div class="footer-note">All secondaries contribute 50% exactly and decimals are preserved.</div>`;
-
-        catalogBody = document.getElementById("catalogBody");
-        if (els) els.catalogBody = catalogBody;
-        return catalogBody;
-      }
-
       function renderTitanRankTable() {
-        const tableBody = ensureTitanRankTableBody();
-        if (!tableBody) return;
-        tableBody.innerHTML = "";
+        els.titanRankTableBody.innerHTML = "";
         Object.entries(TITAN_ENCHANTMENTS).forEach(([name, data]) => {
           if (!data) return;
           const tr = document.createElement("tr");
@@ -3427,24 +3424,24 @@
             <td>${formatTitanRankValue(name, 3)}</td>
             <td>${formatTitanRankValue(name, 4)}</td>
             <td>${formatTitanRankValue(name, 5)}</td>`;
-          tableBody.appendChild(tr);
+          els.titanRankTableBody.appendChild(tr);
         });
       }
 
       function renderCatalog() {
-        const catalogBody = ensureCatalogBody();
-        if (!catalogBody) return;
-        catalogBody.innerHTML = "";
-        GEM_NAMES.forEach((name) => {
+        els.catalogBody.innerHTML = "";
+        const mode = getCurrentSlotType();
+        GEM_NAMES.forEach((gemName) => {
           const tr = document.createElement("tr");
-          const values = [1, 2, 3, 4, 5, 6, 7].map((level) => {
-            const slotType = getCurrentSlotType();
-            const stats = ((GEMS[name] || {})[slotType] || {})[level] || {};
-            const parts = Object.entries(stats).map(([statName, value]) => `${statName} ${formatStat(statName, value)}`);
-            return parts.join(" / ") || "—";
-          });
-          tr.innerHTML = `<td><span class="gem-tag"><span class="orb g-${name}"></span>${name}</span></td>${values.map((value) => `<td>${value}</td>`).join("")}`;
-          catalogBody.appendChild(tr);
+          const gemCell = document.createElement("td");
+          gemCell.innerHTML = `<span class="gem-tag"><span class="orb g-${gemName}"></span><strong>${gemName}</strong></span><div class="muted" style="margin-top:6px;font-size:12px;">${mode === "armor" ? "Armor Effect" : "Weapon/Ring Effect"}</div>`;
+          tr.appendChild(gemCell);
+          for (let level = 1; level <= 7; level += 1) {
+            const td = document.createElement("td");
+            td.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">GS ${GEAR_SCORES.raw[level]}</div><div class="muted" style="font-size:13px;line-height:1.5;">${describeLevel(gemName, mode, level)}</div>`;
+            tr.appendChild(td);
+          }
+          els.catalogBody.appendChild(tr);
         });
       }
 
@@ -3653,19 +3650,26 @@
           render();
         });
 
-        if (els.applyAllTitanLevelsButton && els.setAllTitanLevels) {
-          els.applyAllTitanLevelsButton.addEventListener("click", () => {
-            const level = Number(els.setAllTitanLevels.value || 15);
-            setAllTitanLevels(level);
-            const message = `All Titan Gear set to Level ${level}.`;
-            setStatus(message);
-            showToast(message);
-          });
-        }
-
         els.exportAllLoadoutsButton.addEventListener("click", () => {
           exportAllLoadoutsImage();
         });
+
+        if (els.exportRawBuildDataButton) {
+          els.exportRawBuildDataButton.addEventListener("click", () => {
+            exportRawBuildData();
+          });
+        }
+
+        if (els.importRawBuildDataButton && els.importRawBuildDataInput) {
+          els.importRawBuildDataButton.addEventListener("click", () => {
+            els.importRawBuildDataInput.value = "";
+            els.importRawBuildDataInput.click();
+          });
+          els.importRawBuildDataInput.addEventListener("change", (event) => {
+            const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+            handleImportRawBuildFile(file);
+          });
+        }
 
         els.exportBuildImageButton.addEventListener("click", () => {
           exportBuildImage();
