@@ -14,6 +14,7 @@ This website is designed for players who want more detailed build planning than 
 * Track **Power Stone Gearscore**, **Titan Gear Score**, and **Overall Gear Score**
 * Save unlimited loadouts locally in the browser
 * Export builds and selected loadouts as shareable images
+* import/export of raw build data
 
 ## Main features
 
@@ -119,7 +120,6 @@ Basic builder alternative mentioned on-site:
 Possible future additions may include:
 
 * more export formats
-* import/export of raw build data
 * improved mobile UX refinements
 * additional Hunt Royale systems if needed
 
